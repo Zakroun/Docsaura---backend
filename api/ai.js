@@ -1,27 +1,63 @@
-import { openai } from "../config/openai.js";
-const cors = require("../config/cors.js");
+import Groq from "groq-sdk";
+import cors from "../config/cors.js";
+
+const groq = new Groq({
+    apiKey: process.env.GROQ_API_KEY,
+});
+
 export default async function handler(req, res) {
+    // CORS
     if (cors(req, res)) return;
+
+    // Method check
     if (req.method !== "POST") {
-        return res.status(405).json({ message: "Method not allowed" });
+        return res.status(405).json({
+            success: false,
+            message: "Method not allowed",
+        });
     }
+
     try {
-        const { message } = req.body || {};
-        if (!message) {
-            return res.status(400).json({ error: "Message is required" });
+        const { query } = req.body || {};
+
+        // Validation
+        if (!query || typeof query !== "string") {
+            return res.status(400).json({
+                success: false,
+                message: "Query is required and must be a string",
+            });
         }
-        const response = await openai.responses.create({
-            model: "gpt-4.1-mini",
-            input: message,
+
+        // Call Groq API
+        const response = await groq.chat.completions.create({
+            model: "llama-3.1-70b-versatile",
+            messages: [
+                {
+                    role: "system",
+                    content: "You are a helpful assistant.",
+                },
+                {
+                    role: "user",
+                    content: query,
+                },
+            ],
+            temperature: 0.7,
         });
+
+        const answer = response.choices?.[0]?.message?.content;
+
         return res.status(200).json({
-            reply: response.output[0].content[0].text,
+            success: true,
+            data: answer,
         });
+
     } catch (error) {
-        console.error("AI ERROR:", error);
+        console.error("GROQ ERROR:", error);
+
         return res.status(500).json({
-            error: "Something went wrong",
-            details: error.message,
+            success: false,
+            message: "Internal server error",
+            error: error.message,
         });
     }
 }
