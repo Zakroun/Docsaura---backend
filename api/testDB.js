@@ -17,6 +17,8 @@ export default async function handler(req, res) {
             timestamp: new Date().toISOString(),
         });
     } catch (error) {
+        console.error("DB ERROR:", error);
+
         return res.status(500).json({
             success: false,
             message: "Database connection failed ❌",
