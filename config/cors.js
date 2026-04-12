@@ -1,11 +1,10 @@
-// config/cors.js
 const allowedOrigins = [
     'https://docsauraa.vercel.app',
     'http://localhost:3000',
     'http://localhost:5173',
 ];
 
-const corsMiddleware = (req, res) => {
+export const corsMiddleware = (req, res) => {
     const origin = req.headers.origin;
 
     if (allowedOrigins.includes(origin)) {
@@ -23,5 +22,3 @@ const corsMiddleware = (req, res) => {
 
     return false;
 };
-
-module.exports = corsMiddleware;
