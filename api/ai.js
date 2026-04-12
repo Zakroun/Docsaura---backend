@@ -1,10 +1,26 @@
 import Groq from "groq-sdk";
-import cors from "../config/cors.js";
 
 const groq = new Groq({
     apiKey: process.env.GROQ_API_KEY,
 });
 
+const allowedOrigins = [
+    "http://localhost:5173",
+    "https://docsauraapi.vercel.app",
+    "https://docsauraa.vercel.app"
+];
+
+function setCors(req, res) {
+    const origin = req.headers.origin;
+
+    if (allowedOrigins.includes(origin)) {
+        res.setHeader("Access-Control-Allow-Origin", origin);
+    }
+
+    res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+}
 // ─── Language detection ───────────────────────────────────────────────────────
 
 const LANG_PATTERNS = {
@@ -138,7 +154,20 @@ function isRateLimited(ip) {
 // ─── Main handler ─────────────────────────────────────────────────────────────
 
 export default async function handler(req, res) {
-    if (cors(req, res)) return;
+    // 🚨 CORS must be first
+    setCors(req, res);
+    // 🚨 handle preflight
+    if (req.method === "OPTIONS") {
+        return res.status(204).end();
+    }
+    // 🔥 3. then continue your logic
+    if (req.method !== "POST") {
+        return res.status(405).json({
+            success: false,
+            message: "Method not allowed",
+        });
+    }
+
     if (req.method !== "POST") {
         return res.status(405).json({
             success: false,
