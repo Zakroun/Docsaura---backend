@@ -16,15 +16,23 @@ function setCors(req, res) {
     res.setHeader('Access-Control-Allow-Credentials', 'true');
 }
 
-export default async function handler(req, res) {
-
-    // 🚨 MUST BE FIRST
+export default function handler(req, res) {
     setCors(req, res);
 
-    // 🚨 HANDLE PRE-FLIGHT
-    if (req.method === "OPTIONS") {
+    // 🚨 HANDLE PREFLIGHT FIRST
+    if (req.method === 'OPTIONS') {
         return res.status(204).end();
     }
-    // rest of your logic...
-    return res.status(200).json({ ok: true });
+
+    try {
+        return res.status(200).json({
+            success: true,
+            message: "API working"
+        });
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            error: err.message
+        });
+    }
 }
