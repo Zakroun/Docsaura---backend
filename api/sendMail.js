@@ -36,7 +36,7 @@ export default async function handler(req, res) {
 
         await transporter.sendMail({
             from: process.env.EMAIL_USER,
-            to: process.env.ADMIN_EMAIL, // put your email here
+            to: process.env.CONTACT_EMAIL, // put your email here
             subject: adminEmail.subject,
             html: adminEmail.html,
         });
