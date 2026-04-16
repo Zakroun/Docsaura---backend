@@ -1,28 +1,9 @@
 import Groq from "groq-sdk";
-import cors from "cors";
+const cors = require('../config/cors');
 
 const groq = new Groq({
     apiKey: process.env.GROQ_API_KEY,
 });
-
-const corsMiddleware = cors({
-    origin: [
-        'https://docsaura.vercel.app',
-        'http://localhost:5173',
-        'http://localhost:3000',
-    ],
-    methods: ['POST', 'OPTIONS'],
-    credentials: true,
-});
-
-function runMiddleware(req, res, fn) {
-    return new Promise((resolve, reject) => {
-        fn(req, res, (result) => {
-            if (result instanceof Error) return reject(result);
-            return resolve(result);
-        });
-    });
-}
 
 const LANG_PATTERNS = {
     ar: /[\u0600-\u06FF]/,
@@ -147,8 +128,7 @@ function isRateLimited(ip) {
 
 export default async function handler(req, res) {
     try {
-        await runMiddleware(req, res, corsMiddleware);
-
+        if (cors(req, res)) return;
         if (req.method === 'OPTIONS') {
             return res.status(200).end();
         }
@@ -200,7 +180,6 @@ export default async function handler(req, res) {
         });
 
         const answer = response.choices?.[0]?.message?.content?.trim();
-
         if (!answer) {
             return res.status(200).json({
                 success: true,
@@ -208,7 +187,6 @@ export default async function handler(req, res) {
                 lang,
             });
         }
-
         return res.status(200).json({
             success: true,
             data: answer,
@@ -216,7 +194,6 @@ export default async function handler(req, res) {
             model: response.model,
             usage: response.usage,
         });
-
     } catch (error) {
         console.error("[DocsAura AI] Groq error:", error);
         const status = error?.status ?? 500;

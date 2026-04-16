@@ -1,34 +1,27 @@
+// config/cors.js
 const allowedOrigins = [
-    'http://localhost:5173',
-    'https://docsauraapi.vercel.app',
     'https://docsauraa.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:5173',
 ];
 
-function setCors(req, res) {
+const corsMiddleware = (req, res) => {
     const origin = req.headers.origin;
+
     if (allowedOrigins.includes(origin)) {
         res.setHeader('Access-Control-Allow-Origin', origin);
     }
-    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
-}
 
-export default function handler(req, res) {
-    setCors(req, res);
-    // 🚨 HANDLE PREFLIGHT FIRST
     if (req.method === 'OPTIONS') {
-        return res.status(204).end();
+        res.status(200).end();
+        return true;
     }
-    try {
-        return res.status(200).json({
-            success: true,
-            message: "API working"
-        });
-    } catch (err) {
-        return res.status(500).json({
-            success: false,
-            error: err.message
-        });
-    }
-}
+
+    return false;
+};
+
+module.exports = corsMiddleware;
