@@ -132,14 +132,12 @@ export default async function handler(req, res) {
         if (req.method === 'OPTIONS') {
             return res.status(200).end();
         }
-
         if (req.method !== "POST") {
             return res.status(405).json({
                 success: false,
                 message: "Method not allowed",
             });
         }
-
         const clientIp = req.headers["x-forwarded-for"]?.split(",")[0] ?? req.socket?.remoteAddress ?? "unknown";
         
         if (isRateLimited(clientIp)) {
@@ -148,7 +146,6 @@ export default async function handler(req, res) {
                 message: "Too many requests. Please wait a moment before trying again.",
             });
         }
-
         const raw = req.body?.query;
         if (!raw) {
             return res.status(400).json({
@@ -156,7 +153,6 @@ export default async function handler(req, res) {
                 message: "Query is required.",
             });
         }
-
         const query = sanitizeQuery(raw);
         if (!query || query.length < 2) {
             return res.status(400).json({
@@ -164,11 +160,9 @@ export default async function handler(req, res) {
                 message: "Query is too short or contains invalid characters.",
             });
         }
-
         const lang = detectLanguage(query);
         const systemPrompt = SYSTEM_PROMPTS[lang] ?? SYSTEM_PROMPTS.en;
         const fallback = FALLBACKS[lang] ?? FALLBACKS.en;
-
         const response = await groq.chat.completions.create({
             model: "llama-3.3-70b-versatile",
             temperature: 0.65,
@@ -178,7 +172,6 @@ export default async function handler(req, res) {
                 { role: "user", content: query },
             ],
         });
-
         const answer = response.choices?.[0]?.message?.content?.trim();
         if (!answer) {
             return res.status(200).json({
